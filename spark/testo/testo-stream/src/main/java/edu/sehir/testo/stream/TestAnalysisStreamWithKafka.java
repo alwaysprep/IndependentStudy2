@@ -28,8 +28,8 @@ public final class TestAnalysisStreamWithKafka {
         JavaSparkContext jsc = new TunedSparkContext(Globals.SPARK_MASTER, Globals.SPARK_APPNAME).getJavaSparkContext();
         JavaStreamingContext jssc = new JavaStreamingContext(jsc, Globals.SPARK_STREAM_BATCH_DURATION);
 
-        Set<String> topicsSet = new HashSet<>(Arrays.asList(Globals.KAFKA_SPARK_STREAM_TOPICS.split(",")));
-        Map<String, String> kafkaParams = new HashMap<>();
+        Set<String> topicsSet = new HashSet<String>(Arrays.asList(Globals.KAFKA_SPARK_STREAM_TOPICS.split(",")));
+        Map<String, String> kafkaParams = new HashMap<String, String>();
         kafkaParams.put("metadata.broker.list", Globals.KAFKA_SPARK_STREAM_BROKERS);
 
         // Create direct kafka stream with brokers and topics
@@ -45,7 +45,6 @@ public final class TestAnalysisStreamWithKafka {
 
         // Get the lines
         JavaDStream<String> lines = messages.map(new Function<Tuple2<String, String>, String>() {
-            @Override
             public String call(Tuple2<String, String> tuple2) {
                 return tuple2._2();
             }
@@ -54,7 +53,6 @@ public final class TestAnalysisStreamWithKafka {
         lines.print();
 
         JavaPairDStream<String, Vector> vectors = lines.flatMapToPair(new PairFlatMapFunction<String, String, Vector>() {
-            @Override
             public Iterable<Tuple2<String, Vector>> call(String s) throws Exception {
                 String[] testerAndArray = Globals.TESTER_SPLIT_BY.split(s);
                 String testerID = testerAndArray[0];
@@ -64,14 +62,13 @@ public final class TestAnalysisStreamWithKafka {
                 for (int i = 0; i < sarray.length; i++) {
                     values[i] = Double.parseDouble(sarray[i]);
                 }
-                return Collections.singletonList(new Tuple2<>(testerID, Vectors.dense(values)));
+                return Collections.singletonList(new Tuple2<String, Vector>(testerID, Vectors.dense(values)));
             }
         });
         System.out.println("vectors...");
         vectors.print();
 
         JavaPairDStream<String, Vector> windowedVectors = vectors.reduceByKeyAndWindow(new Function2<Vector, Vector, Vector>() {
-            @Override
             public Vector call(Vector vector1, Vector vector2) throws Exception {
                 Vector nVector1 = VectorUtils.normalizeVector(vector1);
                 Vector nVector2 = VectorUtils.normalizeVector(vector2);
@@ -82,10 +79,8 @@ public final class TestAnalysisStreamWithKafka {
         windowedVectors.print();
 
         windowedVectors.foreachRDD(new Function<JavaPairRDD<String, Vector>, Void>() {
-            @Override
             public Void call(JavaPairRDD<String, Vector> stringVectorJavaPairRDD) throws Exception {
                 stringVectorJavaPairRDD.foreach(new VoidFunction<Tuple2<String, Vector>>() {
-                    @Override
                     public void call(Tuple2<String, Vector> stringVectorTuple2) throws Exception {
                         Writer.saveAsTextFile(
                                 Globals.HDFS_PROCESSED_FILE_DIR,

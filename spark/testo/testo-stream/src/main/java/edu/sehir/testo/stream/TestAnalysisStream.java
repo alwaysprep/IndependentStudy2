@@ -34,7 +34,6 @@ public final class TestAnalysisStream {
 
         JavaDStream<String> lines = flumeStream.map(new Function<SparkFlumeEvent, String>() {
 //            {"headers": {"file": "\/Users\/doktoray\/workspace\/testo\/Datasets\/testers\/tester2\/tester_2-1.txt"}, "body": {"bytes": "tester2-1,1,1,1,1"}}
-            @Override
             public String call(SparkFlumeEvent flumeEvent) throws Exception {
                   return new String(flumeEvent.event().getBody().array());
             }
@@ -43,7 +42,6 @@ public final class TestAnalysisStream {
         lines.print();
 
         JavaPairDStream<String, Vector> vectors = lines.flatMapToPair(new PairFlatMapFunction<String, String, Vector>() {
-            @Override
             public Iterable<Tuple2<String, Vector>> call(String s) throws Exception {
                 String[] testerAndArray = Globals.TESTER_SPLIT_BY.split(s);
                 String testerID = testerAndArray[0];
@@ -53,14 +51,13 @@ public final class TestAnalysisStream {
                 for (int i = 0; i < sarray.length; i++) {
                     values[i] = Double.parseDouble(sarray[i]);
                 }
-                return Collections.singletonList(new Tuple2<>(testerID, Vectors.dense(values)));
+                return Collections.singletonList(new Tuple2<String, Vector>(testerID, Vectors.dense(values)));
             }
         });
         System.out.println("vectors...");
         vectors.print();
 
         JavaPairDStream<String, Vector> windowedVectors = vectors.reduceByKeyAndWindow(new Function2<Vector, Vector, Vector>() {
-            @Override
             public Vector call(Vector vector1, Vector vector2) throws Exception {
                 Vector nVector1 = VectorUtils.normalizeVector(vector1);
                 Vector nVector2 = VectorUtils.normalizeVector(vector2);
@@ -71,10 +68,8 @@ public final class TestAnalysisStream {
         windowedVectors.print();
 
         windowedVectors.foreachRDD(new Function<JavaPairRDD<String, Vector>, Void>() {
-            @Override
             public Void call(JavaPairRDD<String, Vector> stringVectorJavaPairRDD) throws Exception {
                 stringVectorJavaPairRDD.foreach(new VoidFunction<Tuple2<String, Vector>>() {
-                    @Override
                     public void call(Tuple2<String, Vector> stringVectorTuple2) throws Exception {
                         Writer.saveAsTextFile(
                                 Globals.HDFS_PROCESSED_FILE_DIR,
