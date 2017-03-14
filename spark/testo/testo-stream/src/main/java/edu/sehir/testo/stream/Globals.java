@@ -21,16 +21,19 @@ public class Globals {
     public static final String FLUME_SPARK_STREAM_HOST = "localhost";
     public static final Integer FLUME_SPARK_STREAM_PORT = 9999;
 
-    public static final String KAFKA_SPARK_STREAM_BROKERS = "SrvT2C2Work01:9092,SrvT2C2Work02:9092,SrvT2C2Work03:9092"; //"localhost:9092";
+    public static final String KAFKA_SPARK_STREAM_BROKERS = "SrvT2C2Work01:9092,SrvT2C2Work02:9092,SrvT2C2Work03:9092";
+//    public static final String KAFKA_SPARK_STREAM_BROKERS = "localhost:9092";
     public static final String KAFKA_SPARK_STREAM_TOPICS = "test";
 
     public static final Duration SPARK_STREAM_BATCH_DURATION = Durations.seconds(10);
     public static final Duration SPARK_STREAM_WINDOW_LENGTH = Durations.seconds(30);
     public static final Duration SPARK_STREAM_SLIDE_INTERVAL = Durations.seconds(10);
 
-    public static final String HDFS_PROCESSED_FILE_DIR = "/flume/data/processed";  //"/Users/doktoray/workspace/testo/Datasets/hdfs/processed";
+    public static final String HDFS_PROCESSED_FILE_DIR = "/flume/data/processed";
+//    public static final String HDFS_PROCESSED_FILE_DIR = "/Users/doktoray/workspace/testo/Datasets/hdfs/processed";
 
-    public static final String SPARK_MASTER = "spark://SrvT2C2Master:7077";  // "local[4]"
+        public static final String SPARK_MASTER = "spark://SrvT2C2Master:7077";
+//    public static final String SPARK_MASTER = "local[4]";
     public static final String SPARK_APPNAME = "test";
 
 }

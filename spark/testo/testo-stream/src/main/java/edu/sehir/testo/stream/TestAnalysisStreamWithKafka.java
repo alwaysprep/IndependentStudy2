@@ -53,7 +53,7 @@ public final class TestAnalysisStreamWithKafka {
         lines.print();
 
         JavaPairDStream<String, Vector> vectors = lines.flatMapToPair(new PairFlatMapFunction<String, String, Vector>() {
-            public Iterable<Tuple2<String, Vector>> call(String s) throws Exception {
+            public Iterator<Tuple2<String, Vector>> call(String s) throws Exception {
                 String[] testerAndArray = Globals.TESTER_SPLIT_BY.split(s);
                 String testerID = testerAndArray[0];
                 String vector = testerAndArray[1];
@@ -62,7 +62,7 @@ public final class TestAnalysisStreamWithKafka {
                 for (int i = 0; i < sarray.length; i++) {
                     values[i] = Double.parseDouble(sarray[i]);
                 }
-                return Collections.singletonList(new Tuple2<String, Vector>(testerID, Vectors.dense(values)));
+                return Collections.singletonList(new Tuple2<>(testerID, Vectors.dense(values))).iterator();
             }
         });
         System.out.println("vectors...");
@@ -78,8 +78,8 @@ public final class TestAnalysisStreamWithKafka {
         System.out.println("windowed vectors...");
         windowedVectors.print();
 
-        windowedVectors.foreachRDD(new Function<JavaPairRDD<String, Vector>, Void>() {
-            public Void call(JavaPairRDD<String, Vector> stringVectorJavaPairRDD) throws Exception {
+        windowedVectors.foreachRDD(new VoidFunction<JavaPairRDD<String,Vector>>() {
+            public void call(JavaPairRDD<String, Vector> stringVectorJavaPairRDD) throws Exception {
                 stringVectorJavaPairRDD.foreach(new VoidFunction<Tuple2<String, Vector>>() {
                     public void call(Tuple2<String, Vector> stringVectorTuple2) throws Exception {
                         Writer.saveAsTextFile(
@@ -90,7 +90,7 @@ public final class TestAnalysisStreamWithKafka {
                         );
                     }
                 });
-                return null;
+//                return null;
             }
         });
 
