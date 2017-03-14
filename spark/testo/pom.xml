@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>edu.sehir.testo</groupId>
+    <artifactId>testo</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <modules>
+        <module>testo-common</module>
+        <module>testo-stream</module>
+    </modules>
+
+    <properties>
+        <resourcePath>${project.basedir}/src/main/resources</resourcePath>
+        <testResourcePath>${project.basedir}/src/test/resources</testResourcePath>
+        <root>${project.basedir}</root>
+
+        <spark.version>1.5.2</spark.version>
+        <scala.version>2.10.4</scala.version>
+        <log4j.version>2.3</log4j.version>
+        <commons.version>3.3.2</commons.version>
+        <!--<flume.version>1.6.0</flume.version>-->
+        <!--<hadoop.version>2.3.0</hadoop.version>-->
+    </properties>
+
+
+</project>
