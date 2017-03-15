@@ -19,7 +19,7 @@
         <root>${project.basedir}</root>
 
         <spark.version>2.1.0</spark.version>
-        <scala.version>2.10.4</scala.version>
+        <scala.version>2.11.8</scala.version>
         <log4j.version>2.3</log4j.version>
         <commons.version>3.3.2</commons.version>
         <!--<flume.version>1.6.0</flume.version>-->
