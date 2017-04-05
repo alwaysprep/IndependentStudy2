@@ -32,8 +32,8 @@ public class Globals {
     public static final String HDFS_PROCESSED_FILE_DIR = "/flume/data/processed";
 //    public static final String HDFS_PROCESSED_FILE_DIR = "/Users/doktoray/workspace/testo/Datasets/hdfs/processed";
 
-        public static final String SPARK_MASTER = "spark://SrvT2C2Master:7077";
-//    public static final String SPARK_MASTER = "local[4]";
+    public static final String SPARK_MASTER = "spark://SrvT2C2Master:7077";
+    //public static final String SPARK_MASTER = "local[4]";
     public static final String SPARK_APPNAME = "test";
 
 }
