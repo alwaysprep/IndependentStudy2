@@ -4,6 +4,7 @@ import edu.sehir.testo.common.io.Writer;
 import edu.sehir.testo.stream.spark.context.TunedSparkContext;
 import edu.sehir.testo.stream.utils.VectorUtils;
 import kafka.serializer.StringDecoder;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
@@ -12,12 +13,11 @@ import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.Vectors;
-import org.apache.spark.streaming.api.java.JavaDStream;
-import org.apache.spark.streaming.api.java.JavaPairDStream;
-import org.apache.spark.streaming.api.java.JavaPairInputDStream;
-import org.apache.spark.streaming.api.java.JavaStreamingContext;
-import org.apache.spark.streaming.kafka.KafkaUtils;
+import org.apache.spark.streaming.api.java.*;
+import org.apache.spark.streaming.kafka010.*;
 import scala.Tuple2;
+import org.apache.kafka.common.serialization.StringDeserializer;
+
 
 import java.util.*;
 
@@ -28,27 +28,35 @@ public final class TestAnalysisStreamWithKafka {
         JavaSparkContext jsc = new TunedSparkContext(Globals.SPARK_MASTER, Globals.SPARK_APPNAME).getJavaSparkContext();
         JavaStreamingContext jssc = new JavaStreamingContext(jsc, Globals.SPARK_STREAM_BATCH_DURATION);
 
-        Set<String> topicsSet = new HashSet<String>(Arrays.asList(Globals.KAFKA_SPARK_STREAM_TOPICS.split(",")));
-        Map<String, String> kafkaParams = new HashMap<String, String>();
-        kafkaParams.put("metadata.broker.list", Globals.KAFKA_SPARK_STREAM_BROKERS);
+        Collection<String> topics = Arrays.asList("test");
+
+        Map<String, Object> kafkaParams = new HashMap<>();
+        kafkaParams.put("bootstrap.servers", Globals.KAFKA_SPARK_STREAM_BROKERS);
+
+        kafkaParams.put("key.deserializer", StringDeserializer.class);
+        kafkaParams.put("value.deserializer", StringDeserializer.class);
+        kafkaParams.put("group.id", "group_1");
+        kafkaParams.put("auto.offset.reset", "latest");
+        //kafkaParams.put("enable.auto.commit", false);
+        //kafkaParams.put("partition.assignment.strategy",  "org.apache.kafka.clients.consumer.RangeAssignor");
 
         // Create direct kafka stream with brokers and topics
-        JavaPairInputDStream<String, String> messages = KafkaUtils.createDirectStream(
+        JavaInputDStream<ConsumerRecord<String, String>> messages = KafkaUtils.createDirectStream(
+
                 jssc,
-                String.class,
-                String.class,
-                StringDecoder.class,
-                StringDecoder.class,
-                kafkaParams,
-                topicsSet
+                LocationStrategies.PreferConsistent(),
+                ConsumerStrategies.<String, String>Subscribe(topics, kafkaParams)
+
         );
 
         // Get the lines
-        JavaDStream<String> lines = messages.map(new Function<Tuple2<String, String>, String>() {
-            public String call(Tuple2<String, String> tuple2) {
-                return tuple2._2();
-            }
-        });
+        JavaDStream<String> lines = messages.map(
+                new Function<ConsumerRecord<String, String>, String>() {
+                    @Override
+                    public String call(ConsumerRecord<String, String> record) {
+                        return record.value();
+                    }
+                });
         System.out.println("lines...");
         lines.print();
 
