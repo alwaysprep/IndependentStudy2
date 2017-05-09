@@ -1,10 +1,11 @@
 package edu.sehir.testo.stream;
 
-import edu.sehir.testo.common.io.Writer;
+import edu.sehir.testo.common.Path;
 import edu.sehir.testo.stream.spark.context.TunedSparkContext;
 import edu.sehir.testo.stream.utils.VectorUtils;
 import kafka.serializer.StringDecoder;
 import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
@@ -25,7 +26,7 @@ import java.util.*;
 public final class TestAnalysisStreamWithKafka {
 
     public static void main(String[] args) throws Exception {
-        JavaSparkContext jsc = new TunedSparkContext(Globals.SPARK_MASTER, Globals.SPARK_APPNAME).getJavaSparkContext();
+        final JavaSparkContext jsc = new TunedSparkContext(Globals.SPARK_MASTER, Globals.SPARK_APPNAME).getJavaSparkContext();
         JavaStreamingContext jssc = new JavaStreamingContext(jsc, Globals.SPARK_STREAM_BATCH_DURATION);
 
         Set<String> topicsSet = new HashSet<String>(Arrays.asList(Globals.KAFKA_SPARK_STREAM_TOPICS.split(",")));
@@ -82,12 +83,14 @@ public final class TestAnalysisStreamWithKafka {
             public Void call(JavaPairRDD<String, Vector> stringVectorJavaPairRDD) throws Exception {
                 stringVectorJavaPairRDD.foreach(new VoidFunction<Tuple2<String, Vector>>() {
                     public void call(Tuple2<String, Vector> stringVectorTuple2) throws Exception {
-                        Writer.saveAsTextFile(
-                                Globals.HDFS_PROCESSED_FILE_DIR,
-                                stringVectorTuple2._1(),
-                                Globals.TEST_FILE_NAME_FORMAT.format(new Date()),
-                                stringVectorTuple2._2().toString()
-                        );
+                        JavaRDD<String> testerValue = jsc.parallelize(Arrays.asList(stringVectorTuple2._2().toString()));
+                        testerValue.saveAsTextFile(Path.getPath(Globals.HDFS_PROCESSED_FILE_DIR, stringVectorTuple2._1(), Globals.TEST_FILE_NAME_FORMAT.format(new Date())));
+//                        Writer.saveAsTextFile(
+//                                Globals.HDFS_PROCESSED_FILE_DIR,
+//                                stringVectorTuple2._1(),
+//                                Globals.TEST_FILE_NAME_FORMAT.format(new Date()),
+//                                stringVectorTuple2._2().toString()
+//                        );
                     }
                 });
                 return null;
