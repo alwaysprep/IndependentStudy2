@@ -86,9 +86,10 @@ public final class TestAnalysisStreamWithKafka {
             public Void call(JavaPairRDD<String, Vector> stringVectorJavaPairRDD) throws Exception {
                 stringVectorJavaPairRDD.foreach(new VoidFunction<Tuple2<String, Vector>>() {
                     public void call(Tuple2<String, Vector> stringVectorTuple2) throws Exception {
-                        String value = stringVectorTuple2._2().toString();
-                        if (value == null)
-                            value = "";
+                        String value = "";
+                        if (stringVectorTuple2 != null) {
+                            value = stringVectorTuple2._2().toString();
+                        }
                         JavaRDD<String> testerValue = jsc.parallelize(Arrays.asList(value));
                         testerValue.saveAsTextFile(Path.getPath(Globals.HDFS_PROCESSED_FILE_DIR, stringVectorTuple2._1(), Globals.TEST_FILE_NAME_FORMAT.format(new Date())));
 //                        Writer.saveAsTextFile(
