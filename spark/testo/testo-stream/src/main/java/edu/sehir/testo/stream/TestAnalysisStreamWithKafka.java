@@ -25,8 +25,11 @@ import java.util.*;
 
 public final class TestAnalysisStreamWithKafka {
 
+    private transient static JavaSparkContext jsc;
+
+
     public static void main(String[] args) throws Exception {
-        final JavaSparkContext jsc = new TunedSparkContext(Globals.SPARK_MASTER, Globals.SPARK_APPNAME).getJavaSparkContext();
+        jsc = new TunedSparkContext(Globals.SPARK_MASTER, Globals.SPARK_APPNAME).getJavaSparkContext();
         JavaStreamingContext jssc = new JavaStreamingContext(jsc, Globals.SPARK_STREAM_BATCH_DURATION);
 
         Set<String> topicsSet = new HashSet<String>(Arrays.asList(Globals.KAFKA_SPARK_STREAM_TOPICS.split(",")));
