@@ -1,16 +1,17 @@
 package edu.sehir.testo.stream;
 
-import edu.sehir.testo.common.Path;
+import edu.sehir.testo.stream.kafka.KafkaSink;
 import edu.sehir.testo.stream.spark.context.TunedSparkContext;
 import edu.sehir.testo.stream.utils.VectorUtils;
 import kafka.serializer.StringDecoder;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.api.java.function.VoidFunction;
+import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.Vectors;
 import org.apache.spark.streaming.api.java.JavaDStream;
@@ -25,11 +26,8 @@ import java.util.*;
 
 public class TestAnalysisStreamWithKafka {
 
-    private static JavaSparkContext jsc;
-
-
     public static void main(String[] args) throws Exception {
-        jsc = new TunedSparkContext(Globals.SPARK_MASTER, Globals.SPARK_APPNAME).getJavaSparkContext();
+        JavaSparkContext jsc = new TunedSparkContext(Globals.SPARK_MASTER, Globals.SPARK_APPNAME).getJavaSparkContext();
         JavaStreamingContext jssc = new JavaStreamingContext(jsc, Globals.SPARK_STREAM_BATCH_DURATION);
 
         Set<String> topicsSet = new HashSet<String>(Arrays.asList(Globals.KAFKA_SPARK_STREAM_TOPICS.split(",")));
@@ -82,13 +80,26 @@ public class TestAnalysisStreamWithKafka {
         System.out.println("windowed vectors...");
         windowedVectors.print();
 
+        final Broadcast<KafkaSink> kafkaSinkBroadcast = jsc.broadcast(new KafkaSink());
+
         windowedVectors.foreachRDD(new Function<JavaPairRDD<String, Vector>, Void>() {
             public Void call(JavaPairRDD<String, Vector> stringVectorJavaPairRDD) throws Exception {
                 stringVectorJavaPairRDD.foreach(new VoidFunction<Tuple2<String, Vector>>() {
                     public void call(Tuple2<String, Vector> stringVectorTuple2) throws Exception {
                         if (stringVectorTuple2 != null) {
-                            JavaRDD<String> testerValue = jsc.parallelize(Arrays.asList(stringVectorTuple2._2().toString()));
-                            testerValue.saveAsTextFile(Path.getPath(Globals.HDFS_PROCESSED_FILE_DIR, stringVectorTuple2._1(), Globals.TEST_FILE_NAME_FORMAT.format(new Date())));
+
+                            Properties kafkaParams = new Properties();
+                            kafkaParams.put("bootstrap.servers", Globals.KAFKA_SPARK_STREAM_BROKERS);
+                            kafkaParams.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+                            kafkaParams.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+
+                            String topic = stringVectorTuple2._1();
+                            String value = stringVectorTuple2._2().toString();
+
+                            kafkaSinkBroadcast.getValue().getInstance(kafkaParams).send(new ProducerRecord<String, String>(topic, value));
+
+                            // testerValue.saveAsTextFile(Path.getPath(Globals.HDFS_PROCESSED_FILE_DIR, stringVectorTuple2._1(), Globals.TEST_FILE_NAME_FORMAT.format(new Date())));
                         }
 //                        Writer.saveAsTextFile(
 //                                Globals.HDFS_PROCESSED_FILE_DIR,
