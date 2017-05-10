@@ -93,7 +93,6 @@ public class TestAnalysisStreamWithKafka {
                             kafkaParams.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
                             kafkaParams.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
-
                             String topic = stringVectorTuple2._1();
                             String value = stringVectorTuple2._2().toString();
 
